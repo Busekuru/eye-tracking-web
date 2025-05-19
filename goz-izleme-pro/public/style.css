@@ -1,0 +1,272 @@
+/* ———————————————————————————————————————————  
+   0) Global & Reset (Normalize sonrası)  
+   ——————————————————————————————————————————— */
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: var(--dark-text);
+  background: #fff;
+  margin: 0; padding: 0;
+  overflow-x: hidden;
+}
+
+/* ———————————————————————————————————————————  
+   1) Floating Navbar  
+   ——————————————————————————————————————————— */
+.nav-floating {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.nav-content {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+}
+.logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+.btn-login {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+.btn-login:hover {
+  background: var(--primary);
+}
+
+/* ———————————————————————————————————————————  
+   2) Hero Section  
+   ——————————————————————————————————————————— */
+.hero-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6rem 1rem 4rem;
+  min-height: 85vh;
+  overflow: hidden;
+}
+.hero-text {
+  flex: 1;
+  max-width: 500px;
+  z-index: 2;
+  margin-right: -8rem;
+  padding-right: 4rem;
+  margin-left: 2rem;
+}
+.hero-text h1 {
+  font-size: 3rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+.hero-text h1 span {
+  color: var(--primary);
+}
+.hero-text p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: var(--dark-text);
+  opacity: 0.9;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Hero Image and Shapes */
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+  margin-left: 0;
+}
+.image-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transition: transform 0.3s;
+  position: relative;
+}
+.image-wrapper:hover {
+  transform: scale(1.02);
+}
+.image-wrapper img {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  object-fit: cover;
+}
+.image-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s;
+}
+.image-wrapper:hover .image-caption {
+  opacity: 0.9;
+}
+
+/* Abstract Background Shapes */
+.bg-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+  transition: transform 0.5s ease-out;
+}
+.bg-shape-1 {
+  width: 400px; height: 400px;
+  background: var(--accent);
+  top: -50px; right: -100px;
+}
+.bg-shape-2 {
+  width: 500px; height: 500px;
+  background: var(--primary);
+  bottom: -150px; left: -150px;
+}
+
+/* ———————————————————————————————————————————  
+   3) Wave Divider  
+   ——————————————————————————————————————————— */
+.wave-divider svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: -5px;
+}
+
+/* ———————————————————————————————————————————  
+   4) Features Carousel  
+   ——————————————————————————————————————————— */
+.features-section {
+  background: var(--light-bg);
+  padding: 4rem 1rem;
+  text-align: center;
+}
+.features-section h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--dark-text);
+}
+.features-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 1.5rem;
+  padding: 1rem 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.feature-card {
+  flex: 0 0 280px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  scroll-snap-align: center;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.feature-card h3 {
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-size: 1.25rem;
+}
+.feature-card p {
+  color: var(--dark-text);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+/* Scroll-in animation */
+.feature-card.visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* ———————————————————————————————————————————  
+   5) Footer  
+   ——————————————————————————————————————————— */
+.site-footer {
+  background: #fff;
+  padding: 2rem 1rem;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+.site-footer p {
+  margin: 0;
+  color: var(--dark-text);
+  opacity: 0.8;
+}
+.site-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.site-footer a:hover {
+  color: var(--primary);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero-section {
+    flex-direction: column;
+    text-align: center;
+    padding-top: 5rem;
+  }
+  .hero-text {
+    margin-bottom: 2rem;
+  }
+  .hero-text h1 {
+    font-size: 2.5rem;
+  }
+  .logo {
+    font-size: 1.1rem;
+  }
+  .feature-card {
+    flex: 0 0 240px;
+  }
+}

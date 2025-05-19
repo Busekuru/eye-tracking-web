@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>WebGazer + Calibration + Heatmap</title>
+
+  <!-- Bootstrap CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"
+    crossorigin="anonymous"
+  />
+
+  <style>
+    /* ─────────────────────────────────────────────────────────── */
+    /* CONTAINER (small window) to wrap video + overlays */
+    #video-wrapper {
+      position: absolute;
+      bottom: 10px;   /* 10px up from bottom right */
+      right: 10px;    /* 10px in from right edge */
+      width: 200px;   /* desired width */
+      height: 150px;  /* desired height */
+      z-index: 10;    /* above everything else */
+      pointer-events: none;
+    }
+    /*  Make the video & all canvases in this container fit */
+    #video-wrapper > video,
+    #video-wrapper > canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    /* ─────────────────────────────────────────────────────────── */
+    /* Full screen canvas for calibration drawing */
+    #plotting_canvas {
+      position:absolute;
+      top:0; left:0;
+      width:100vw; height:100vh;
+      z-index:2;
+      pointer-events:none;
+    }
+    /* 9 points buttons */
+    .calibrationDiv {
+      position:absolute; top:0; left:0;
+      width:100vw; height:100vh;
+      z-index:5;
+    }
+    .Calibration {
+      position:absolute;
+      width:30px; height:30px;
+      background:red; border-radius:50%;
+      opacity:0.2; cursor:pointer;
+    }
+    #Pt1 { top:10%; left:10%; }  #Pt2 { top:10%; left:50%; }  #Pt3 { top:10%; left:90%; }
+    #Pt4 { top:50%; left:10%; }  #Pt5 { top:50%; left:50%; }  #Pt6 { top:50%; left:90%; }
+    #Pt7 { top:90%; left:10%; }  #Pt8 { top:90%; left:50%; }  #Pt9 { top:90%; left:90%; }
+    .Calibration.done { background:lime; }
+    /* Status text */
+    #status {
+      position:absolute;
+      bottom:180px; right:10px;
+      color:#fff; font-size:16px;
+      text-shadow:0 0 5px #000;
+      z-index:7;
+    }
+    
+    /* Feedback Form Modal Styling */
+    .modal-content {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .modal-body {
+      padding: 2rem;
+    }
+    
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    
+    .form-control:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.15);
+    }
+    
+    .btn-primary {
+      border-radius: 8px;
+      padding: 0.75rem 2rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="video-wrapper"></div>
+
+  <!-- Canvas and buttons for calibration -->
+  <canvas id="plotting_canvas"></canvas>
+  <div class="calibrationDiv">
+    <input type="button" class="Calibration" id="Pt1">
+    <input type="button" class="Calibration" id="Pt2">
+    <input type="button" class="Calibration" id="Pt3">
+    <input type="button" class="Calibration" id="Pt4">
+    <input type="button" class="Calibration" id="Pt5">
+    <input type="button" class="Calibration" id="Pt6">
+    <input type="button" class="Calibration" id="Pt7">
+    <input type="button" class="Calibration" id="Pt8">
+    <input type="button" class="Calibration" id="Pt9">
+  </div>
+
+  <!-- Wrapper for Ad + Heatmap -->
+  <div id="ad-wrapper" style="
+      position:absolute; top:0; left:0;
+      width:100vw; height:100vh;
+      display:none;       /* başta gizli */
+      background:#000;    /* isteğe bağlı arka plan */
+      z-index:8;          /* calibrationDiv'in üstünde, video-wrapper'ın altında */
+  ">
+    <!-- Ad image -->
+    <img id="ad-image" src="" style="
+        width:100%; height:100%;
+        object-fit:contain;
+    "/>
+    <!-- Heatmap layer -->
+    <div id="heatmapContainer" style="
+        position:absolute; top:0; left:0;
+        width:100%; height:100%;
+        pointer-events:none;
+    "></div>
+  </div>
+
+  <!-- For Accuracy indicator -->
+  <div id="Accuracy"
+  style="
+    position:absolute;
+    bottom:150px; right:10px;
+    color:#fff;
+    font-size:18px;
+    text-shadow:0 0 5px #000;
+    z-index:8;
+  ">
+  </div>
+
+  <!-- The layer where we will put the Heatmap output -->
+  <div id="heatmapContainer"></div>
+
+  <!-- Feedback Form Modal -->
+  <div class="modal fade" id="feedbackModal" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Please Share Your Feedback</h5>
+        </div>
+        <div class="modal-body">
+          <form id="userFeedbackForm">
+            <div class="form-group">
+              <label for="userName">Name *</label>
+              <input type="text" class="form-control" id="userName" required>
+            </div>
+            <div class="form-group">
+              <label for="userAge">Age *</label>
+              <input type="number" class="form-control" id="userAge" required min="1" max="120">
+            </div>
+            <div class="form-group">
+              <label for="userGender">Gender *</label>
+              <select class="form-control" id="userGender" required>
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer-not-say">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="userEmail">Email (optional)</label>
+              <input type="email" class="form-control" id="userEmail">
+            </div>
+            <div class="form-group">
+              <label for="userFeedback">Feedback (optional)</label>
+              <textarea class="form-control" id="userFeedback" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Submit & Download Results</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="webgazer.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <!-- Add JSZip library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- Before precision calculation code (defines xPast50 and yPast50) -->
+  <script>
+    window.xPast50 = [];
+    window.yPast50 = [];
+  </script>
+  <script src="js/precision_calculation.js"></script>
+  <!-- Then store_points (get_points uses xPast50 here) -->
+  <script src="js/precision_store_points.js"></script>
+  <!-- Canvas resize helper -->
+  <script src="js/resize_canvas.js"></script>
+  <!-- Calibration logic -->
+  <script src="js/calibration.js"></script>
+
+  <!-- Heatmap.js -->
+  <script src="heatmap.min.js"></script>
+  <script src="js/ads_heatmap.js"></script>
+
+  <!-- Application initialization -->
+  <script>
+    const origSwal = window.swal;
+    window.swal = function(opts) {
+      return origSwal(opts).then(res => {
+        if (window.isCalibrated) startHeatmap();
+        return res;
+      });
+    };
+
+    // Heatmap initialization function
+    let heatmapInstance;
+    function startHeatmap() {
+      document.querySelector('.calibrationDiv').style.display = 'none';
+      document.getElementById('heatmapContainer').style.display = 'block';
+
+      heatmapInstance = h337.create({
+        container: document.getElementById('heatmapContainer'),
+        radius: 30, maxOpacity: .6, minOpacity: 0, blur: .85
+      });
+
+      webgazer.setGazeListener(data => {
+        if (data) heatmapInstance.addData({ x: data.x, y: data.y, value: 1 });
+      });
+    }
+
+    // Launch WebGazer and open the calibration window
+    webgazer
+      .setRegression('ridge')
+      .showVideoPreview(true)
+      .showPredictionPoints(true)
+      .showFaceOverlay(true)
+      .showFaceFeedbackBox(true)
+      .begin()
+      .then(() => {
+        PopUpInstruction(); // comes from calibration.js
+      });
+  </script>
+  
+  
+</body>
+</html>
